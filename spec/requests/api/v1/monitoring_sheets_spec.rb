@@ -16,7 +16,7 @@ RSpec.describe "POST /api/v1/monitoring_sheets", type: :request do
       headers: { "Content-Type" => "application/json" }
 
     expect(response).to have_http_status(:created)
-    expect(JSON.parse(response.body))["data"]["attributes"]["lot"].to eq("03")
+    expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("03")
   end
 
   it "retorna erro com dados inválidos" do
