@@ -6,6 +6,11 @@ module Api
         render json: { data: sheets.map { |s| { attributes: s } } }, status: :ok
       end
 
+      def show
+        sheet = MonitoringSheet.find(params[:id])
+        render json: { data: { attributes: sheet } }, status: :ok
+      end
+
       def create
         sheet = MonitoringSheet.new(sheet_params)
 
