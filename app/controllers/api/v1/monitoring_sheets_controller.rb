@@ -21,6 +21,16 @@ module Api
         end
       end
 
+      def update
+        sheet = MonitoringSheet.find(params[:id])
+
+        if sheet.update(sheet_params)
+          render json: { data: { attributes: sheet } }, status: :ok
+        else
+          render json: { data: { errors: sheet.errors.full_messages } }, status: :unprocessable_entity
+        end
+      end
+
       private
 
       def sheet_params
