@@ -1,6 +1,11 @@
 module Api
   module V1
     class MonitoringSheetsController < ApplicationController
+      def index
+        sheets = MonitoringSheet.all
+        render json: { data: sheets.map { |s| { attributes: s } } }, status: :ok
+      end
+
       def create
         sheet = MonitoringSheet.new(sheet_params)
 
