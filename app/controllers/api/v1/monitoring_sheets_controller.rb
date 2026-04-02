@@ -1,44 +1,46 @@
 module Api
   module V1
     class MonitoringSheetsController < ApplicationController
+      before_action :set_sheet, only: [ :show, :update, :destroy ]
+
       def index
         sheets = MonitoringSheet.all
         render json: { data: sheets.map { |s| { attributes: s } } }, status: :ok
       end
 
       def show
-        sheet = MonitoringSheet.find(params[:id])
-        render json: { data: { attributes: sheet } }, status: :ok
+        render_sheet(@sheet)
       end
 
       def create
         sheet = MonitoringSheet.new(sheet_params)
 
         if sheet.save
-          render json: { data: { attributes: sheet } }, status: :created
+          render_sheet(sheet, status: :created)
         else
-          render json: { data: { errors: sheet.errors.full_messages } }, status: :unprocessable_entity
+          render_errors(sheet)
         end
       end
 
       def update
-        sheet = MonitoringSheet.find(params[:id])
-
-        if sheet.update(sheet_params)
-          render json: { data: { attributes: sheet } }, status: :ok
+        if @sheet.update(sheet_params)
+          render_sheet(@sheet)
         else
-          render json: { data: { errors: sheet.errors.full_messages } }, status: :unprocessable_entity
+          render_errors(@sheet)
         end
       end
 
       def destroy
-        sheet = MonitoringSheet.find(params[:id])
-        sheet.destroy
+        @sheet.destroy
 
         head :no_content
       end
 
       private
+
+      def set_sheet
+        @sheet = MonitoringSheet.find(params[:id])
+      end
 
       def sheet_params
         params.require(:monitoring_sheet).permit(
@@ -54,6 +56,16 @@ module Api
           :occurrence_evaluation,
           :coordinate_system
         )
+      end
+
+      def render_sheet(sheet, status: :ok)
+        render json: { data: { attributes: sheet } }, status: status
+      end
+
+      def render_errors(sheet)
+        render json: {
+          errors: sheet.errors.full_messages
+          }, status: :unprocessable_entity
       end
     end
   end
