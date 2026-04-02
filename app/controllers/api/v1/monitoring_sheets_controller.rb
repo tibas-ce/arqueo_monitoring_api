@@ -31,6 +31,13 @@ module Api
         end
       end
 
+      def destroy
+        sheet = MonitoringSheet.find(params[:id])
+        sheet.destroy
+
+        head :no_content
+      end
+
       private
 
       def sheet_params
