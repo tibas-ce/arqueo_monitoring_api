@@ -33,6 +33,13 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("02")
     end
+
+    it "retorna 404 quando ficha não existe" do
+      get "/api/v1/monitoring_sheets/id-invalido"
+
+      expect(response).to have_http_status(:not_found)
+      expect(JSON.parse(response.body)["error"]).to eq("Ficha não encontrada!")
+    end
   end
 
   describe "POST /api/v1/monitoring_sheets" do
@@ -78,6 +85,23 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["data"]["attributes"]["activity"]).to eq("Supressão vegetal")
+    end
+  end
+
+  describe "DELETE /api/v1/monitoring_sheets/:id" do
+    let(:sheet) { MonitoringSheet.create!(
+      monitoring_date:       "2025-07-16",
+      activity:              "Exploração de jazida",
+      lot:                   "03",
+      work_status:           "Fase Intermediária",
+      occurrence_evaluation: "Sem ocorrência arqueológica"
+    )}
+
+    it "deleta ficha" do
+       delete "/api/v1/monitoring_sheets/#{sheet.id}",
+        headers: { "Content-Type" => "application/json" }
+
+      expect(response).to have_http_status(:no_content)
     end
   end
 end
