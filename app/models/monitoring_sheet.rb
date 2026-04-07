@@ -1,4 +1,6 @@
 class MonitoringSheet < ApplicationRecord
+  has_many :photos, dependent: :destroy
+
   validates :monitoring_date,       presence: true
   validates :activity,              presence: true
   validates :lot,                   presence: true
