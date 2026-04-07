@@ -34,4 +34,21 @@ RSpec.describe "API::V1::Photos", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "DELETE /api/v1/:monitoring_sheets_id/photos/:id" do
+    let(:photo) { Photo.create!(
+      monitoring_sheet:     sheet,
+      caption:              "Figura 01 - Exploração de jazida",
+      coord_e:              "458037",
+      coord_n:              "9198130",
+      position:             "0"
+    )}
+
+    it "deleta photo" do
+       delete "/api/v1/monitoring_sheets/#{sheet.id}/photos/#{photo.id}",
+        headers: { "Content-Type" => "application/json" }
+
+      expect(response).to have_http_status(:no_content)
+    end
+  end
 end
