@@ -5,11 +5,12 @@ module Api
 
       def create
         photo = @sheet.photos.new(photo_params)
+        photo.image.attach(params[:image]) if params[:image].present?
 
         if photo.save
           render json: { data: { attributes: photo } }, status: :created
         else
-          render json: { errors: photo.errors.full_messages }, status: :unprocessable_content
+          render json: { errors: photo.errors.full_messages }, status: :unprocessable_entity
         end
       end
 

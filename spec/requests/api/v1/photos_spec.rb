@@ -16,11 +16,12 @@ RSpec.describe "API::V1::Photos", type: :request do
             coord_e:              "458037",
             coord_n:              "9198130",
             position:             "0"
-        }
+        },
+        image: fixture_file_upload("spec/fixtures/files/test_photo01.jpg", "image/jpeg")
       }
 
-      post "/api/v1/monitoring_sheets/#{sheet.id}/photos", params: params.to_json,
-        headers: { "Content-Type" => "application/json" }
+      post "/api/v1/monitoring_sheets/#{sheet.id}/photos", params: params,
+        headers: { "Content-Type" => "multipart/form-data" }
 
       expect(response).to have_http_status(:created)
       expect(JSON.parse(response.body)["data"]["attributes"]["caption"]).to eq("Figura 01 - Exploração de jazida")
