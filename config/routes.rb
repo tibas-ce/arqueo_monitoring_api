@@ -3,6 +3,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :monitoring_sheets, only: [ :create, :index, :show, :update, :destroy ]
       resources :monitoring_sheets do
+        member do
+          get :export_pdf
+        end
         resources :photos, only: [ :create, :destroy ]
       end
     end
