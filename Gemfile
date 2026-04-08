@@ -32,6 +32,13 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# Biblioteca Ruby para gerar PDFs de forma programática
+gem "prawn"
+# Extensão do Prawn para criar tabelas dentro de PDFs
+gem "prawn-table"
+# Biblioteca padrão do Ruby para operações matemáticas com matrizes
+gem "matrix"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
