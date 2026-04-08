@@ -3,6 +3,15 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Define o host e a porta padrão usados pelo Rails para gerar URLs completas
+  # (ex: ActiveStorage, url_for, links em e-mails, etc).
+  # Necessário para que arquivos anexados (como imagens) retornem uma URL acessível pelo frontend.
+  # Em produção, esses valores devem ser ajustados para o domínio real da aplicação.
+  Rails.application.routes.default_url_options = {
+    host: "localhost",
+    port: 3000
+  }
+
   # Make code changes take effect immediately without server restart.
   config.enable_reloading = true
 
