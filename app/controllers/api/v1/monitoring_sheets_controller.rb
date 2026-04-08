@@ -1,7 +1,7 @@
 module Api
   module V1
     class MonitoringSheetsController < ApplicationController
-      before_action :set_sheet, only: [ :show, :update, :destroy ]
+      before_action :set_sheet, only: [ :show, :update, :destroy, :export_pdf ]
 
       def index
         sheets = MonitoringSheet.all
@@ -34,6 +34,14 @@ module Api
         @sheet.destroy
 
         head :no_content
+      end
+
+      def export_pdf
+        pdf = MonitoringSheetPdfService.new(@sheet).generate
+        send_data pdf,
+                  filename: "monitoramento_#{@sheet.monitoring_date}_lote#{@sheet.lot}.pdf",
+                  type: "application/pdf",
+                  disposition: "inline"
       end
 
       private
