@@ -1,6 +1,13 @@
 require "rails_helper"
 
 RSpec.describe "API::V1::MonitoringSheets", type: :request do
+  let(:sheet) { MonitoringSheet.create!(
+      monitoring_date:       "2025-07-16",
+      activity:              "Exploração de jazida",
+      lot:                   "02",
+      work_status:           "Fase Intermediária",
+      occurrence_evaluation: "Sem ocorrência arqueológica"
+    )}
   describe "GET /api/v1/monitoring_sheets" do
     it "retorna a lista de fichas" do
       MonitoringSheet.create!(
@@ -20,14 +27,6 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
 
   describe "GET /api/v1/monitoring_sheets/:id" do
     it "retorna ficha com dados válidos" do
-      sheet = MonitoringSheet.create!(
-          monitoring_date:       "2025-07-16",
-          activity:              "Exploração de jazida",
-          lot:                   "02",
-          work_status:           "Fase Intermediária",
-          occurrence_evaluation: "Sem ocorrência arqueológica"
-        )
-
       get "/api/v1/monitoring_sheets/#{sheet.id}"
 
       expect(response).to have_http_status(:ok)
@@ -39,6 +38,15 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(JSON.parse(response.body)["error"]).to eq("Ficha não encontrada!")
+    end
+  end
+
+  describe "GET /api/v1/monitoring_sheets/:id/export_pdf" do
+    it "retorna um PDF" do
+      get "/api/v1/monitoring_sheets/#{sheet.id}/export_pdf"
+
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to include("application/pdf")
     end
   end
 
@@ -70,14 +78,6 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
   end
 
   describe "PATCH /api/v1/monitoring_sheets/:id" do
-    let(:sheet) { MonitoringSheet.create!(
-      monitoring_date:       "2025-07-16",
-      activity:              "Exploração de jazida",
-      lot:                   "03",
-      work_status:           "Fase Intermediária",
-      occurrence_evaluation: "Sem ocorrência arqueológica"
-    )}
-
     it "usuário pode alterar atividade" do
       patch "/api/v1/monitoring_sheets/#{sheet.id}",
         params: { monitoring_sheet: { activity: "Supressão vegetal" } }.to_json,
@@ -89,14 +89,6 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
   end
 
   describe "DELETE /api/v1/monitoring_sheets/:id" do
-    let(:sheet) { MonitoringSheet.create!(
-      monitoring_date:       "2025-07-16",
-      activity:              "Exploração de jazida",
-      lot:                   "03",
-      work_status:           "Fase Intermediária",
-      occurrence_evaluation: "Sem ocorrência arqueológica"
-    )}
-
     it "deleta ficha" do
        delete "/api/v1/monitoring_sheets/#{sheet.id}",
         headers: { "Content-Type" => "application/json" }
