@@ -1,22 +1,10 @@
 require "rails_helper"
 
 RSpec.describe "API::V1::MonitoringSheets", type: :request do
-  let(:sheet) { MonitoringSheet.create!(
-      monitoring_date:       "2025-07-16",
-      activity:              "Exploração de jazida",
-      lot:                   "02",
-      work_status:           "Fase Intermediária",
-      occurrence_evaluation: "Sem ocorrência arqueológica"
-    )}
+  let(:sheet) { create(:monitoring_sheet) }
   describe "GET /api/v1/monitoring_sheets" do
     it "retorna a lista de fichas" do
-      MonitoringSheet.create!(
-        monitoring_date:       "2025-07-16",
-        activity:              "Exploração de jazida",
-        lot:                   "03",
-        work_status:           "Fase Intermediária",
-        occurrence_evaluation: "Sem ocorrência arqueológica"
-      )
+      create(:monitoring_sheet)
 
       get "/api/v1/monitoring_sheets"
 
@@ -30,7 +18,7 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
       get "/api/v1/monitoring_sheets/#{sheet.id}"
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("02")
+      expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("03")
     end
 
     it "retorna 404 quando ficha não existe" do
@@ -52,13 +40,15 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
 
   describe "POST /api/v1/monitoring_sheets" do
     it "cria uma ficha com dados válidos" do
+      project = create(:project)
       params = {
         monitoring_sheet: {
           monitoring_date:       "2025-07-16",
           activity:              "Exploração de jazida",
           lot:                   "03",
           work_status:           "Fase Intermediária",
-          occurrence_evaluation: "Sem ocorrência arqueológica"
+          occurrence_evaluation: "Sem ocorrência arqueológica",
+          project_id: project.id
         }
       }
 
