@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_191351) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_09_190615) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_191351) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "companies", force: :cascade do |t|
+    t.string "cnpj"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "name"
+    t.string "phone"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "monitoring_sheets", force: :cascade do |t|
     t.string "activity"
     t.string "coordinate_system"
@@ -51,11 +60,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_191351) do
     t.string "lot"
     t.date "monitoring_date"
     t.text "occurrence_evaluation"
+    t.bigint "project_id", null: false
     t.string "stake_interval"
     t.decimal "start_x"
     t.decimal "start_y"
     t.datetime "updated_at", null: false
     t.string "work_status"
+    t.index ["project_id"], name: "index_monitoring_sheets_on_project_id"
   end
 
   create_table "photos", force: :cascade do |t|
@@ -69,7 +80,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_191351) do
     t.index ["monitoring_sheet_id"], name: "index_photos_on_monitoring_sheet_id"
   end
 
+  create_table "projects", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "municipality"
+    t.string "name"
+    t.string "ordinance_number"
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_projects_on_company_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "monitoring_sheets", "projects"
   add_foreign_key "photos", "monitoring_sheets"
+  add_foreign_key "projects", "companies"
 end
