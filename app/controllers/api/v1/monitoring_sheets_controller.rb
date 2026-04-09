@@ -62,7 +62,8 @@ module Api
           :end_y,
           :work_status,
           :occurrence_evaluation,
-          :coordinate_system
+          :coordinate_system,
+          :project_id
         )
       end
 
