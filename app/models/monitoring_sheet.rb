@@ -1,4 +1,5 @@
 class MonitoringSheet < ApplicationRecord
+  belongs_to :project
   has_many :photos, dependent: :destroy
 
   validates :monitoring_date,       presence: true
