@@ -1,15 +1,16 @@
 FactoryBot.define do
   factory :monitoring_sheet do
-    monitoring_date { "2026-03-30" }
-    activity { "MyString" }
-    stake_interval { "MyString" }
-    lot { "MyString" }
-    start_x { "9.99" }
-    start_y { "9.99" }
-    end_x { "9.99" }
-    end_y { "9.99" }
-    work_status { "MyString" }
-    occurrence_evaluation { "MyText" }
-    coordinate_system { "MyString" }
+    monitoring_date { Date.today }
+    activity { "Exploração de jazida" }
+    stake_interval { "020+310 a 020+380" }
+    lot { "03" }
+    start_x { "458046.0" }
+    start_y { "9198147.0" }
+    end_x { "458037.0" }
+    end_y { "9198130.0" }
+    work_status { "Fase Intermediária" }
+    occurrence_evaluation { "Sem ocorrência arqueológica" }
+    coordinate_system { "UTM-SIRGA200-ZONA24S" }
+    association :project
   end
 end

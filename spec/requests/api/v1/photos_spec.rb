@@ -1,13 +1,7 @@
 require "rails_helper"
 
 RSpec.describe "API::V1::Photos", type: :request do
-  let(:sheet) { MonitoringSheet.create!(
-      monitoring_date:       "2025-07-16",
-      activity:              "Exploração de jazida",
-      lot:                   "03",
-      work_status:           "Fase Intermediária",
-      occurrence_evaluation: "Sem ocorrência arqueológica"
-    )}
+  let(:sheet) { create(:monitoring_sheet) }
   describe "POST /api/v1/:monitoring_sheet_id/photos" do
     it "cria uma photo com dados válidos" do
       params = {
