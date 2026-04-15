@@ -5,5 +5,5 @@ class Project < ApplicationRecord
   validates :name,              presence: true
   validates :municipality,      presence: true
   validates :ordinance_number,  presence: true
-  validates :company,           presence: true
+  validates :company_id,        presence: true
 end

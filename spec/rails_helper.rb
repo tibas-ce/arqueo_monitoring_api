@@ -34,10 +34,19 @@ begin
 rescue ActiveRecord::PendingMigrationError => e
   abort e.to_s.strip
 end
+
+Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |f| require f }
+
 RSpec.configure do |config|
   config.color = true
   config.tty = true
   config.formatter = :documentation
+
+  # Helpers - base reutilizável para todos os specs
+  config.include JsonHelper, type: :request
+  config.include HeadersHelper, type: :request
+  config.include RequestHelper, type: :request
+
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')

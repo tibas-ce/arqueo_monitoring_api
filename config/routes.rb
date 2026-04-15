@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
+      resources :companies
+      resources :projects
       resources :monitoring_sheets, only: [ :create, :index, :show, :update, :destroy ]
       resources :monitoring_sheets do
         member do
