@@ -7,17 +7,22 @@ RSpec.describe Project, type: :model do
   end
 
   it "é inválido sem nome" do
-    project = Project.new(name: nil)
+    project = build(:project, name: nil)
+    expect(project).not_to be_valid
+  end
+
+  it "é inválido sem portaria" do
+    project = build(:project, ordinance_number: nil)
     expect(project).not_to be_valid
   end
 
   it "é inválido sem município" do
-    project = Project.new(municipality: nil)
+    project = build(:project, municipality: nil)
     expect(project).not_to be_valid
   end
 
   it "é inválido sem Empresa" do
-    project = Project.new(company: nil)
+    project = build(:project, company: nil)
     expect(project).not_to be_valid
   end
 end
