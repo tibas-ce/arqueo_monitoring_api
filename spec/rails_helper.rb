@@ -46,6 +46,7 @@ RSpec.configure do |config|
   config.include JsonHelper, type: :request
   config.include HeadersHelper, type: :request
   config.include RequestHelper, type: :request
+  config.include ValidationHelpers, type: :model
 
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
