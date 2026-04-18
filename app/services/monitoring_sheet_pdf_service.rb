@@ -1,10 +1,20 @@
 class MonitoringSheetPdfService
+  ORBITAL_IMAGE_PATH = Rails.root.join("app/assets/images/orbital.jpg").to_s
+
+  PAGE_WIDTH = 595.28
+  MARGIN = 36
+  CONTENT_WIDTH = PAGE_WIDTH - (MARGIN * 2)
+  PHOTO_WIDTH = (CONTENT_WIDTH - 10) / 2
+  PHOTO_HEIGHT = 130
+
   def initialize(sheet)
     @sheet = sheet
+    @project = sheet.project
+    @company = sheet.project.company
   end
 
   def generate
-    pdf = Prawn::Document.new
+    pdf = Prawn::Document
 
     font_path = Rails.root.join("app/assets/fonts/DejaVuSans.ttf").to_s
     font_bold = Rails.root.join("app/assets/fonts/DejaVuSans-Bold.ttf").to_s
@@ -29,6 +39,20 @@ class MonitoringSheetPdfService
   end
 
   private
+
+  # Fontes
+  def setup_fonts(pdf)
+    font_path = Rails.root.join("app/assets/fonts/DejaVuSans.ttf").to_s
+    font_bold = Rails.root.join("app/assets/fonts/DejaVuSans-Bold.ttf").to_s
+    pdf.font_families.update(
+      "DejaVu" => {
+        normal: font_path,
+        bold: font_bold,
+        italic: font_path
+       }
+    )
+    pdf.font "DejaVu"
+  end
 
   def build_info_table(pdf)
     pdf.table([
