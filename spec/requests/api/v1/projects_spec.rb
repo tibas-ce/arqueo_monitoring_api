@@ -22,11 +22,11 @@ RSpec.describe "API::V1::Projects", type: :request do
       expect(json["data"]).to include("attributes")
       expect(json["data"]["attributes"]).to include(
         "name" => project.name,
+        "description" => project.description,
         "ordinance_number"  => project.ordinance_number,
         "municipality"  => project.municipality,
         "company_id"  => project.company_id
         )
-      expect(json["data"]["attributes"]).to include("description")
     end
 
     it "retorna 404 quando projeto não existe" do
@@ -62,6 +62,51 @@ RSpec.describe "API::V1::Projects", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(json["errors"]).to be_present
+    end
+  end
+
+  describe "PATCH /api/v1/projects/:id" do
+    it "atualiza um projeto com dados válidos" do
+      json_request(:patch, "/api/v1/projects/#{project.id}", params: {
+        project: { name: "CE-083 Atualizado" }
+      })
+
+      expect(response).to have_http_status(:ok)
+      expect(json["data"]["attributes"]).to include("name" => "CE-083 Atualizado")
+    end
+
+    it "retorna erro com dados inválidos" do
+      json_request(:patch, "/api/v1/projects/#{project.id}", params: {
+        project: { name: "" }
+      })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json["errors"]).to be_present
+    end
+
+    it "retorna 404 quando projeto não existe" do
+      json_request(:patch, "/api/v1/projects/id-invalido", params: {
+        project: { name: "Qualquer" }
+      })
+
+      expect(response).to have_http_status(:not_found)
+      expect(json["error"]).to be_present
+    end
+  end
+
+  describe "DELETE /api/v1/projects/:id" do
+    it "remove um projeto existente" do
+      delete "/api/v1/projects/#{project.id}"
+
+      expect(response).to have_http_status(:no_content)
+      expect { project.reload }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it "retorna 404 quando projeto não existe" do
+      delete "/api/v1/projects/id-invalido"
+
+      expect(response).to have_http_status(:not_found)
+      expect(json["error"]).to be_present
     end
   end
 end
