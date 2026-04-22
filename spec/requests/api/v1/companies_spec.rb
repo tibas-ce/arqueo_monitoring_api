@@ -19,6 +19,7 @@ RSpec.describe "API::V1::Companies", type: :request do
       get "/api/v1/companies/#{company.id}"
 
       expect(response).to have_http_status(:ok)
+      expect(json["data"]).to include("attributes")
       expect(json["data"]["attributes"]).to include("name" => company.name)
       expect(json["data"]["attributes"]).to include(
         "cnpj",
@@ -57,6 +58,51 @@ RSpec.describe "API::V1::Companies", type: :request do
 
       expect(response).to have_http_status(:unprocessable_entity)
       expect(json["errors"]).to be_present
+    end
+  end
+
+  describe "PATCH /api/v1/companies/:id" do
+    it "atualiza uma empresa com dados válidos" do
+      json_request(:patch, "/api/v1/companies/#{company.id}", params: {
+        company: { name: "Novo Nome Ltda" }
+      })
+
+      expect(response).to have_http_status(:ok)
+      expect(json["data"]["attributes"]).to include("name" => "Novo Nome Ltda")
+    end
+
+    it "retorna erro com dados inválidos" do
+      json_request(:patch, "/api/v1/companies/#{company.id}", params: {
+        company: { name: "" }
+      })
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(json["errors"]).to be_present
+    end
+
+    it "retorna 404 quando empresa não existe" do
+      json_request(:patch, "/api/v1/companies/id-invalido", params: {
+        company: { name: "Qualquer" }
+      })
+
+      expect(response).to have_http_status(:not_found)
+      expect(json["error"]).to be_present
+    end
+  end
+
+  describe "DELETE /api/v1/companies/:id" do
+    it "remove uma empresa existente" do
+      delete "/api/v1/companies/#{company.id}"
+
+      expect(response).to have_http_status(:no_content)
+      expect { company.reload }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it "retorna 404 quando empresa não existe" do
+      delete "/api/v1/companies/id-invalido"
+
+      expect(response).to have_http_status(:not_found)
+      expect(json["error"]).to be_present
     end
   end
 end
