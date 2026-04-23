@@ -4,8 +4,7 @@ module Api
       before_action :set_sheet, only: [ :show, :update, :destroy, :export_pdf ]
 
       def index
-        sheets = MonitoringSheet.all
-        render json: { data: sheets.map { |s| { attributes: s } } }, status: :ok
+        render json: { data: filtered_sheets.map { |s| { attributes: s } } }, status: :ok
       end
 
       def show
@@ -65,6 +64,15 @@ module Api
           :coordinate_system,
           :project_id
         )
+      end
+
+      def filtered_sheets
+        sheets = MonitoringSheet.all
+        sheets = sheets.where(lot: params[:lot]) if params[:lot].present?
+        if params[:start_date].present? && params[:end_date].present?
+          sheets = sheets.where(monitoring_date: params[:start_date]..params[:end_date])
+        end
+        sheets
       end
 
       def render_sheet(sheet, status: :ok)
