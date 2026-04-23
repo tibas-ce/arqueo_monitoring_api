@@ -38,6 +38,98 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
     end
   end
 
+  describe "GET /api/v1/monitoring_sheets/filters" do
+    context "filtra por lote" do
+      it "filtra fichas por lote" do
+        create(:monitoring_sheet, lot: "01")
+        create(:monitoring_sheet, lot: "02")
+        create(:monitoring_sheet, lot: "02")
+
+        get "/api/v1/monitoring_sheets?lot=02"
+
+        expect(response).to have_http_status(:ok)
+        lots = json["data"].map { |s| s["attributes"]["lot"] }
+        expect(lots.length).to eq(2)
+        expect(lots.uniq).to eq([ "02" ])
+      end
+
+      it "retorna lista vazia quando nenhuma ficha corresponde ao lote" do
+        create(:monitoring_sheet, lot: "01")
+
+        get "/api/v1/monitoring_sheets?lot=99"
+
+        expect(response).to have_http_status(:ok)
+        expect(json["data"]).to be_empty
+      end
+    end
+
+    context "filtra por intervalo de datas" do
+       it "filtra fichas dentro do intervalo" do
+        create(:monitoring_sheet, monitoring_date: "2025-01-10")
+        create(:monitoring_sheet, monitoring_date: "2025-06-15")
+        create(:monitoring_sheet, monitoring_date: "2025-12-20")
+
+        get "/api/v1/monitoring_sheets?start_date=2025-01-01&end_date=2025-06-30"
+
+        expect(response).to have_http_status(:ok)
+        dates = json["data"].map { |s| Date.parse(s["attributes"]["monitoring_date"]) }
+        expect(dates.length).to eq(2)
+        expect(dates).to all(
+          satisfy { |d| d >= Date.parse("2025-01-01") && d <= Date.parse("2025-06-30") }
+        )
+      end
+
+      it "filtra fichas por data exata (start_date = end_date)" do
+        create(:monitoring_sheet, monitoring_date: "2025-06-15")
+        create(:monitoring_sheet, monitoring_date: "2025-07-01")
+
+        get "/api/v1/monitoring_sheets?start_date=2025-06-15&end_date=2025-06-15"
+
+        expect(response).to have_http_status(:ok)
+        dates = json["data"].map { |s| Date.parse(s["attributes"]["monitoring_date"]) }
+        expect(dates.length).to eq(1)
+        expect(dates).to all(eq(Date.parse("2025-06-15")))
+      end
+    end
+
+    context "combinar filtros" do
+      it "combina filtro de lote e data" do
+        create(:monitoring_sheet, lot: "02", monitoring_date: "2025-03-10")
+        create(:monitoring_sheet, lot: "02", monitoring_date: "2025-08-10")
+        create(:monitoring_sheet, lot: "03", monitoring_date: "2025-03-10")
+
+        get "/api/v1/monitoring_sheets?lot=02&start_date=2025-01-01&end_date=2025-06-30"
+
+        expect(response).to have_http_status(:ok)
+        data = json["data"]
+        expect(data.length).to eq(1)
+        record = data.first["attributes"]
+        expect(record["lot"]).to eq("02")
+        expect(Date.parse(record["monitoring_date"])).to be_between(Date.parse("2025-01-01"), Date.parse("2025-06-30"))
+      end
+
+      it "retorna todas as fichas quando nenhum filtro é enviado" do
+        create_list(:monitoring_sheet, 3)
+
+        get "/api/v1/monitoring_sheets"
+
+        expect(response).to have_http_status(:ok)
+        expect(json["data"].length).to eq(3)
+      end
+    end
+
+    context "parâmetros inválidos" do
+      it "retorna error com dados inválidos" do
+        create(:monitoring_sheet, monitoring_date: "2025-06-15")
+
+        get "/api/v1/monitoring_sheets?start_date=invalid&end_date=invalid"
+
+        expect(response).to have_http_status(:ok)
+        expect(json["data"]).not_to be_nil
+      end
+    end
+  end
+
   describe "POST /api/v1/monitoring_sheets" do
     it "cria uma ficha com dados válidos" do
       project = create(:project)
