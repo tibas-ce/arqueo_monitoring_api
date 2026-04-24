@@ -3,13 +3,14 @@ require "rails_helper"
 RSpec.describe "API::V1::MonitoringSheets", type: :request do
   let(:sheet) { create(:monitoring_sheet) }
   describe "GET /api/v1/monitoring_sheets" do
+    it_behaves_like "um recurso paginado", "/api/v1/monitoring_sheets"
     it "retorna a lista de fichas" do
       create(:monitoring_sheet)
 
       get "/api/v1/monitoring_sheets"
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["data"].length).to eq(1)
+      expect(json["data"].size).to be >= 1
     end
   end
 
@@ -18,14 +19,14 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
       get "/api/v1/monitoring_sheets/#{sheet.id}"
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("03")
+      expect(json["data"]["attributes"]["lot"]).to eq("03")
     end
 
     it "retorna 404 quando ficha não existe" do
       get "/api/v1/monitoring_sheets/id-invalido"
 
       expect(response).to have_http_status(:not_found)
-      expect(JSON.parse(response.body)["error"]).to eq("Ficha não encontrada!")
+      expect(json["error"]).to eq("Ficha não encontrada!")
     end
   end
 
@@ -125,7 +126,102 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
         get "/api/v1/monitoring_sheets?start_date=invalid&end_date=invalid"
 
         expect(response).to have_http_status(:ok)
-        expect(json["data"]).not_to be_nil
+        expect(json["data"]).to be_an(Array)
+      end
+    end
+  end
+
+  describe "GET /api/v1/monitoring_sheets/pagination" do
+    context "paginação padrão" do
+      it "retorna dados paginados com metadados" do
+        create_list(:monitoring_sheet, 12)
+
+        get "/api/v1/monitoring_sheets"
+
+        expect(response).to have_http_status(:ok)
+
+        expect(json["data"].size).to eq(10)
+
+        expect(json["meta"]).to include(
+          "current_page" => 1,
+          "total_count" => 12,
+          "total_pages" => 2,
+          "limit" => 10
+        )
+      end
+
+      it "retorna registros ordenados por id" do
+        create_list(:monitoring_sheet, 12)
+
+        get "/api/v1/monitoring_sheets"
+
+        ids = json["data"].map { |s| s["id"] }
+        expected_ids = MonitoringSheet.order(:id).limit(10).pluck(:id)
+        expect(ids).to eq(expected_ids)
+      end
+    end
+
+    context "navegação entre páginas" do
+      it "retorna a segunda página corretamente" do
+        create_list(:monitoring_sheet, 12)
+
+        get "/api/v1/monitoring_sheets?page=2"
+
+        returned_ids = json["data"].map { |s| s["id"] }
+        expected_ids = MonitoringSheet.order(:id).offset(10).limit(10).pluck(:id)
+
+        expect(response).to have_http_status(:ok)
+        expect(returned_ids.size).to eq(2)
+        expect(returned_ids).to eq(expected_ids)
+      end
+
+      it "retorna conjuntos diferentes entre páginas" do
+        create_list(:monitoring_sheet, 20)
+
+        get "/api/v1/monitoring_sheets?page=1"
+        page1_ids = json["data"].map { |s| s["id"] }
+
+        get "/api/v1/monitoring_sheets?page=2"
+        page2_ids = json["data"].map { |s| s["id"] }
+
+        expect(page1_ids).not_to eq(page2_ids)
+      end
+
+      it "retorna lista vazia para página inexistente" do
+        create_list(:monitoring_sheet, 5)
+
+        get "/api/v1/monitoring_sheets?page=999"
+
+        expect(response).to have_http_status(:ok)
+        expect(json["data"]).to be_empty
+        expect(json["meta"]["current_page"]).to eq(999)
+        expect(json["meta"]["total_pages"]).to eq(1)
+      end
+    end
+
+    context "customização de limites" do
+      it "permite customizar o limite por página" do
+        create_list(:monitoring_sheet, 12)
+
+        get "/api/v1/monitoring_sheets?limit=5"
+
+        expect(response).to have_http_status(:ok)
+        expect(json["data"].length).to eq(5)
+        expect(json["meta"]["limit"]).to eq(5)
+      end
+    end
+
+    context "paginação com filtros" do
+      it "respeita filtro de lote com paginação" do
+        create_list(:monitoring_sheet, 8, lot: "02")
+        create_list(:monitoring_sheet, 5, lot: "03")
+
+        get "/api/v1/monitoring_sheets?lot=02&page=1"
+
+        expect(response).to have_http_status(:ok)
+        lots = json["data"].map { |s| s["attributes"]["lot"] }
+        expect(lots).to all(eq("02"))
+        expect(json["meta"]["total_count"]).to eq(8)
       end
     end
   end
@@ -149,16 +245,14 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
         }
       }
 
-      post "/api/v1/monitoring_sheets", params: params.to_json,
-        headers: { "Content-Type" => "application/json" }
+      json_request(:post, "/api/v1/monitoring_sheets",  params: params)
 
       expect(response).to have_http_status(:created)
-      expect(JSON.parse(response.body)["data"]["attributes"]["lot"]).to eq("03")
+      expect(json["data"]["attributes"]["lot"]).to eq("03")
     end
 
     it "retorna erro com dados inválidos" do
-      post "/api/v1/monitoring_sheets", params: { monitoring_sheet: { lot: "" } }.to_json,
-        headers: { "Content-Type" => "application/json" }
+      json_request(:post, "/api/v1/monitoring_sheets", params: { monitoring_sheet: { lot: "" } })
 
       expect(response).to have_http_status(:unprocessable_entity)
     end
@@ -166,21 +260,19 @@ RSpec.describe "API::V1::MonitoringSheets", type: :request do
 
   describe "PATCH /api/v1/monitoring_sheets/:id" do
     it "usuário pode alterar atividade" do
-      patch "/api/v1/monitoring_sheets/#{sheet.id}",
-        params: { monitoring_sheet: { activity: "Supressão vegetal" } }.to_json,
-        headers: { "Content-Type" => "application/json" }
+      json_request(:patch, "/api/v1/monitoring_sheets/#{sheet.id}", params: { monitoring_sheet: { activity: "Supressão vegetal" } })
 
       expect(response).to have_http_status(:ok)
-      expect(JSON.parse(response.body)["data"]["attributes"]["activity"]).to eq("Supressão vegetal")
+      expect(json["data"]["attributes"]["activity"]).to eq("Supressão vegetal")
     end
   end
 
   describe "DELETE /api/v1/monitoring_sheets/:id" do
     it "deleta ficha" do
-       delete "/api/v1/monitoring_sheets/#{sheet.id}",
-        headers: { "Content-Type" => "application/json" }
+       delete "/api/v1/monitoring_sheets/#{sheet.id}"
 
       expect(response).to have_http_status(:no_content)
+      expect(response.body).to be_empty
     end
   end
 end
