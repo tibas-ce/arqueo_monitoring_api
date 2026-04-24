@@ -1,10 +1,18 @@
+# TODO: implementar validação de parâmetros (start_date, end_date) e retornar 422 Unprocessable Entity em caso de entrada inválida
 module Api
   module V1
     class MonitoringSheetsController < ApplicationController
       before_action :set_sheet, only: [ :show, :update, :destroy, :export_pdf ]
 
       def index
-        render json: { data: filtered_sheets.map { |s| { attributes: s } } }, status: :ok
+        sheets = filtered_sheets
+
+        records, meta = paginate(sheets)
+
+        render json: {
+          data: records.map { |s| { id: s.id, attributes: s } },
+          meta: meta
+          }, status: :ok
       end
 
       def show
